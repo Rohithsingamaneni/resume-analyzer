@@ -1,0 +1,10 @@
+services:
+  pgvector:
+    image: ankane/pgvector:latest
+    container_name: resume-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=vector_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
