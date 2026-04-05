@@ -53,6 +53,13 @@ pipeline {
                 archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
             }
         }
+
+        stage('Unit Tests') {
+            steps {
+                // Run everything EXCEPT the Integration tests
+                sh './gradlew test --tests "*ServiceTest"'
+            }
+        }
     }
 
     post {
