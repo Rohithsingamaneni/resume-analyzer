@@ -1,6 +1,8 @@
 package com.example.resume.service;
 
+import com.example.resume.model.ResumeAnalysis;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,38 +24,60 @@ public class QueryService {
         this.vectorStore = vectorStore;
     }
 
-    public String analyze(String query) {
-        // 1. Updated Retrieval: Using the modern Builder pattern
-        List<Document> similarDocuments = vectorStore.similaritySearch(
-                SearchRequest.builder()
-                        .query(query)
-                        .topK(4) // This replaces the deprecated withTopK
-                        .build()
-        );
+    /**
+     * Structured Analysis for Recruiters
+     */
+    public ResumeAnalysis getStructuredAnalysis(String query) {
+        var converter = new BeanOutputConverter<>(ResumeAnalysis.class);
+        String context = getContextFromVectorStore(query);
 
-        // 2. Extract content from documents
-        String content = similarDocuments.stream()
-                .map(Document::getText)
-                .collect(Collectors.joining(System.lineSeparator()));
-
-        // 3. Create the RAG Prompt Template
         String promptTemplate = """
-                You are a professional recruiter assistant. 
-                Use the following pieces of retrieved context from a candidate's resume to answer the question.
-                If the answer isn't in the context, say you don't know. 
+                Analyze the candidate based on the provided resume context.
+                Focus on technical skills and experience levels.
+                
+                {format}
                 
                 CONTEXT:
                 {context}
                 
-                QUESTION:
-                {question}
+                USER_QUERY:
+                {query}
                 """;
 
-        // 4. Generation: Using .params() to inject variables into the template
         return chatClient.prompt()
                 .user(u -> u.text(promptTemplate)
-                        .params(Map.of("context", content, "question", query)))
+                        .params(Map.of(
+                                "context", context,
+                                "query", query,
+                                "format", converter.getFormat() // Injects the JSON schema
+                        )))
+                .call()
+                .entity(ResumeAnalysis.class); // Automatically converts JSON -> ResumeAnalysis record
+    }
+
+    public String analyze(String query) {
+        String context = getContextFromVectorStore(query);
+        String promptTemplate = """
+                You are a recruiter assistant. Answer based ONLY on the context.
+                CONTEXT: {context}
+                QUESTION: {question}
+                """;
+
+        return chatClient.prompt()
+                .user(u -> u.text(promptTemplate)
+                        .params(Map.of("context", context, "question", query)))
                 .call()
                 .content();
+    }
+
+    private String getContextFromVectorStore(String query) {
+        return Objects.requireNonNull(vectorStore.similaritySearch(
+                        SearchRequest.builder()
+                                .query(query)
+                                .topK(4)
+                                .build()))
+                .stream()
+                .map(Document::getText)
+                .collect(Collectors.joining(System.lineSeparator()));
     }
 }
