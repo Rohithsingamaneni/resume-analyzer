@@ -18,13 +18,13 @@ public class IngestionService {
     private final VectorStore vectorStore;
     private final Resource[] resumeFiles;
     public IngestionService(VectorStore vectorStore,
-                            @Value("classpath:resumes/*.pdf") Resource[] resumes) {
+                            @Value("${resumes.path:classpath:resumes/*.pdf}") Resource[] resumes) {
         this.vectorStore = vectorStore;
-        this.resumeFiles = resumes;
+        this.resumeFiles = (resumes != null) ? resumes : new Resource[0];
     }
 
     public void ingest() {
-        if (resumeFiles == null || resumeFiles.length == 0) {
+        if (resumeFiles.length == 0) {
             log.warn("No resumes found in resources/resumes/ folder!");
             return;
         }

@@ -1,5 +1,6 @@
 package com.example.resume.controller;
 
+import com.example.resume.model.ResumeAnalysis;
 import com.example.resume.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
