@@ -16,13 +16,11 @@ import java.util.List;
 public class IngestionService {
 
     private final VectorStore vectorStore;
-
-    // Looks for any PDF in your resources/resumes folder
-    @Value("classpath:resumes/*.pdf")
-    private Resource[] resumeFiles;
-
-    public IngestionService(VectorStore vectorStore) {
+    private final Resource[] resumeFiles;
+    public IngestionService(VectorStore vectorStore,
+                            @Value("classpath:resumes/*.pdf") Resource[] resumes) {
         this.vectorStore = vectorStore;
+        this.resumeFiles = resumes;
     }
 
     public void ingest() {
@@ -34,17 +32,11 @@ public class IngestionService {
         for (Resource pdfResource : resumeFiles) {
             log.info("Processing resume: {}", pdfResource.getFilename());
 
-            // 1. EXTRACT: Read the PDF
             var pdfReader = new PagePdfDocumentReader(pdfResource);
             List<Document> documents = pdfReader.get();
 
-            // 2. TRANSFORM: Split into chunks (so the AI doesn't get overwhelmed)
-            // 800 tokens per chunk with a 100-token overlap to keep context
             var splitter = new TokenTextSplitter(800, 100, 5, 10000, true);
             List<Document> chunks = splitter.apply(documents);
-
-            // 3. LOAD: Send to PGVector
-            // This automatically calls Ollama to turn text into "numbers" (embeddings)
             vectorStore.accept(chunks);
 
             log.info("Successfully indexed {} chunks for {}", chunks.size(), pdfResource.getFilename());
