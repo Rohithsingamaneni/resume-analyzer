@@ -58,7 +58,7 @@ class IngestionIntegrationTest {
         var results = vectorStore.similaritySearch("Apple Maps search evaluation");
         assertThat(results).isNotEmpty();
 
-        String actualText = Objects.requireNonNull(results.getFirst().getText()).replaceAll("\\s+", " ");
+        String actualText = Objects.requireNonNull(Objects.requireNonNull(results).getFirst().getText()).replaceAll("\\s+", " ");
 
         assertThat(actualText)
                 .withFailMessage("The search found the document, but the expected keywords were missing or formatted poorly.")

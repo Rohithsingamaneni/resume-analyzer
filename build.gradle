@@ -26,30 +26,25 @@ repositories {
 
 ext {
     set('springAiVersion', "1.0.0-M5")
-    // Force a newer Testcontainers version to handle 2026 Docker API changes
     set('testcontainersVersion', "1.21.0")
 }
 
 dependencies {
-    // --- Spring AI & Backend Core ---
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
     implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
     implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
+    implementation 'com.microsoft.onnxruntime:onnxruntime:1.19.2'
 
-    // --- Developer Productivity ---
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // --- Testing & Infrastructure ---
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-
-    // Explicit versions to resolve the 'Status 400' Docker Engine mismatch
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
 
-    // Required for Gradle 9.0+ to execute JUnit 5 tests
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -61,10 +56,6 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
-
-    // This bridges your Mac's Docker socket into the isolated Test JVM automatically.
     environment "DOCKER_HOST", System.getenv("DOCKER_HOST") ?: "unix://${System.getProperty('user.home')}/.docker/run/docker.sock"
-
-    // Speeds up local testing by allowing Testcontainers to keep the DB alive between runs
     systemProperty "testcontainers.reuse.enable", "true"
 }
