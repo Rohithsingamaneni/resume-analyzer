@@ -38,7 +38,7 @@ class QueryServiceTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "null"})
     void testAnalyze_ShouldReturnAiResponse() {
         Document mockDoc = new Document("Experience: Apple Maps and gRPC.");
         when(vectorStore.similaritySearch(any(SearchRequest.class)))

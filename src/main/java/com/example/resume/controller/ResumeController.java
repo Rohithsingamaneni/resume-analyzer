@@ -1,11 +1,11 @@
 package com.example.resume.controller;
 
-import com.example.resume.model.ResumeAnalysis;
 import com.example.resume.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,9 +15,10 @@ public class ResumeController {
 
     private final IngestionService ingestionService;
     private final ChatClient chatClient;
+    @NonNull
     private final VectorStore vectorStore;
 
-    public ResumeController(IngestionService ingestionService, ChatClient.Builder builder, VectorStore vectorStore) {
+    public ResumeController(IngestionService ingestionService, ChatClient.Builder builder, @NonNull VectorStore vectorStore) {
         this.ingestionService = ingestionService;
         this.vectorStore = vectorStore;
         this.chatClient = builder.build();
@@ -30,7 +31,7 @@ public class ResumeController {
     }
 
     @GetMapping("/analyze")
-    public String analyze(@RequestParam String query) {
+    public String analyze(@RequestParam(name = "query") @NonNull String query) {
         log.info("Analyzing resumes with query: {}", query);
         return chatClient.prompt()
                 .advisors(new QuestionAnswerAdvisor(vectorStore))

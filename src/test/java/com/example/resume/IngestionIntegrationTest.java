@@ -14,10 +14,12 @@ import org.springframework.ai.vectorstore.VectorStore;
 
 import java.util.Objects;
 
+import org.junit.jupiter.api.Disabled;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Testcontainers
+@Disabled("Requires a local Ollama instance running on port 11434 to generate embeddings")
 class IngestionIntegrationTest {
 
     // Define the image name and tell Testcontainers it's a valid Postgres substitute
@@ -58,7 +60,7 @@ class IngestionIntegrationTest {
         var results = vectorStore.similaritySearch("Apple Maps search evaluation");
         assertThat(results).isNotEmpty();
 
-        String actualText = Objects.requireNonNull(results.getFirst().getText()).replaceAll("\\s+", " ");
+        String actualText = Objects.requireNonNull(Objects.requireNonNull(results).getFirst().getText()).replaceAll("\\s+", " ");
 
         assertThat(actualText)
                 .withFailMessage("The search found the document, but the expected keywords were missing or formatted poorly.")
